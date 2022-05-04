@@ -1,0 +1,138 @@
+---
+title: "PCA"
+output:
+  html_document:
+    df_print: paged
+---
+
+https://satijalab.org/seurat/articles/pbmc3k_tutorial.html
+
+```{r}
+library(readr)
+EZ_Batch1 <- read_csv("EZ_Batch1.csv")
+EZ_Batch1<-as.data.frame(EZ_Batch1)
+
+
+```
+```{r}
+head(EZ_Batch1)
+```
+
+
+```{r}
+library(Seurat)
+```
+```{r}
+colnames(EZ_Batch1)[1] <- "gene"
+rownames(EZ_Batch1) <- EZ_Batch1$gene
+EZ_Batch1$gene <- NULL
+head(EZ_Batch1)
+
+```
+
+
+```{r}
+library(data.table)
+
+
+# transpose
+tez <- transpose(EZ_Batch1)
+
+# get row and colnames in order
+colnames(tez) <- rownames(EZ_Batch1)
+rownames(tez) <- colnames(EZ_Batch1)
+
+```
+
+```{r}
+obj <- CreateSeuratObject(counts=EZ_Batch1, project="EZ_Batch1", min.cells = 3, min.features = 200)
+obj
+```
+```{r}
+obj[["percent.mt"]] <- PercentageFeatureSet(obj, pattern = "^MT-")
+```
+
+```{r}
+VlnPlot(obj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+```
+```{r}
+
+plot1 <- FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1
+plot2
+```
+```{r}
+obj <- subset(obj, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+obj <- NormalizeData(obj, normalization.method = "LogNormalize", scale.factor = 10000)
+```
+```{r}
+obj <- FindVariableFeatures(obj, selection.method = "vst", nfeatures = 2000)
+
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(obj), 10)
+
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(obj)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot1
+plot2
+```
+```{r}
+all.genes <- rownames(obj)
+obj <- ScaleData(obj, features = all.genes)
+```
+```{r}
+obj <- RunPCA(obj, features = VariableFeatures(object = obj))
+print(obj[["pca"]], dims = 1:5, nfeatures = 5)
+```
+
+
+```{r}
+DimHeatmap(obj, dims = 1, cells = 500, balanced = TRUE)
+```
+```{r}
+ElbowPlot(obj)
+```
+
+```{r}
+obj <- FindNeighbors(obj, dims = 1:20)
+obj <- FindClusters(obj, resolution = 0.5)
+```
+
+
+```{r}
+head(Idents(obj), 5)
+```
+
+
+```{r}
+obj <- RunUMAP(obj, dims = 1:20)
+DimPlot(obj, reduction = "umap", label=TRUE)
+
+```
+
+```{r}
+x_markers <- FindMarkers(obj, ident.1 = 1, min.pct = 0.25,  test.use = "wilcox")
+```
+
+```{r}
+# find all markers of each clusters
+for (x in 1:21) {
+  print(x)
+  x_markers <- FindMarkers(obj, ident.1 = x, min.pct = 0.25,  test.use = "wilcox")
+  write.csv(x_markers,sprintf("markers/c%s.csv",x)
+)
+}
+
+```
+## Check out our analysis in the find_marker.ipynb. We found that cluster 17 is microglia 
+
+
+```{r}
+c17 <- subset(obj, idents = c("17"))
+```{r}
+saveRDS(c17, file = "c17.rds")
+
+```
+```
