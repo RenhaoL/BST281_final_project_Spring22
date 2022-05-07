@@ -9,9 +9,9 @@ library(enrichplot)
 library(AnnotationDbi)
 library(DOSE)
 
-#################### AD ###################
 gene <- read.delim("AD_cluster5_results.txt", header = T, sep = ",")
 head(gene)
+#################### AD ###################
 gene_AD <- gene %>% filter(log2FoldChange >0 )
 head(gene_AD)
 nrow(gene_AD)
@@ -44,7 +44,7 @@ ggp2 <- ggplot(head(ego,40), aes(reorder(Description, -log10(p.adjust)),-log10(p
   geom_bar(stat = "identity") + 
   xlab("GO_BP Terms")+
   scale_fill_viridis_c()+
-  ggtitle("GO Terms for AD")
+  ggtitle("GO Terms for Up-regulated Genes")
 ggp2 +  coord_flip() + theme_bw()
 # KEGG From enrichKEGG
 # Gene symbol to ENTREZID
@@ -56,7 +56,7 @@ browseKEGG(kk, 'mmu05010')
 kkp <- ggplot(head(kk,30), aes(reorder(Description, -log10(p.adjust)),-log10(p.adjust))) +   
   geom_bar(stat = "identity", fill='steelblue') + 
   xlab("KEGG Pathways")+
-  ggtitle("KEGG for AD")
+  ggtitle("KEGG for Up-regulated Genes")
 kkp +  coord_flip() + theme_bw()
 
 
@@ -95,7 +95,7 @@ ggp_WT2 <- ggplot(head(ego_WT,40), aes(reorder(Description, -log10(p.adjust)),-l
   geom_bar(stat = "identity") + 
   xlab("GO_BP Terms")+
   scale_fill_viridis_c()+
-  ggtitle("GO Terms for WT")
+  ggtitle("GO Terms for Down-regulated Genes")
 ggp_WT2 +  coord_flip() + theme_bw()
 # KEGG From enrichKEGG
 ge_WT <- AnnotationDbi::select(org.Mm.eg.db, keys=names(geneList_WT), columns='ENTREZID', keytype='SYMBOL')$ENTREZID
@@ -105,5 +105,5 @@ head(kk_WT)
 kkp_WT <- ggplot(head(kk_WT,30), aes(reorder(Description, -log10(p.adjust)),-log10(p.adjust))) +   
   geom_bar(stat = "identity", fill='#E69F00') + 
   xlab("KEGG Pathways")+
-  ggtitle("KEGG for WT")
+  ggtitle("KEGG for Down-regulated Genes")
 kkp_WT +  coord_flip() + theme_bw()
