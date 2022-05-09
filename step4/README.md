@@ -6,9 +6,13 @@ In this part, I compared the neuronal cells vs. Microglia in both WT and AD mice
 2. `WT_output`: folder contains the CellphoneDB results in WT mice, neuronal cells vs. microglia
 
 Note: in the CellphoneDB output folder, each one contains four different files:
+
     - deconvoluted.txt     : This file contains additional information regarding the interaction pairs. This is important as some of the partners are heteromers.
+
     - means.txt            : This file contains the mean value for all the interacting partners. 
+    
     - pvalues.txt          : P values for all the interacting partners. This p-value refers to the enrichment of the interacting ligand-receptor pair in each of the interacting pairs of cell types
+    
     - significant_mean.txt : Significant mean calculation for all the interacting partners, but only considering the significant terms.  
 
 3. `Figures`: folder contains the dot plots and heatmap from CellphoneDB outputs
