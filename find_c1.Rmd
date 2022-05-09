@@ -9,7 +9,7 @@ https://satijalab.org/seurat/articles/pbmc3k_tutorial.html
 
 ```{r}
 library(readr)
-EZ_Batch1 <- read_csv("EZ_Batch1.csv")
+EZ_Batch1 <- read_csv("step\ 1/EZ_Batch1.csv")
 EZ_Batch1<-as.data.frame(EZ_Batch1)
 
 

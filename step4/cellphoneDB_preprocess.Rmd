@@ -1,0 +1,237 @@
+---
+title: "cellphoneDB_preprocess"
+author: "Renhao Luo"
+date: "5/7/2022"
+output: html_document
+---
+
+```{r}
+library(stringr)
+
+# if (!require("BiocManager", quietly = TRUE))
+#     install.packages("BiocManager")
+# 
+# BiocManager::install("biomaRt")
+
+library(biomaRt)
+library(dplyr)
+# library("org.Hs.eg.db")
+```
+
+
+```{r}
+cluster5_matrix <- readRDS("../../c5_17.rds")
+head(cluster5_matrix)
+
+c5 <- subset(cluster5_matrix, idents=c('5'))
+counts <- as.data.frame(c5@assays$RNA@counts)
+coldata <- data.frame(sample= colnames(counts))
+coldata$condition[str_detect(coldata$sample,'WT')] = 'WT'
+coldata$condition[!str_detect(coldata$sample,'WT')] = 'AD'
+
+counts
+```
+
+
+```{r}
+rownames(counts)
+```
+
+
+
+```{r}
+# Basic function to convert mouse to human gene names
+convertMouseGeneList <- function(x){
+library("biomaRt")
+human <- useMart("ensembl", dataset = "hsapiens_gene_ensembl", host="https://dec2021.archive.ensembl.org/")
+mouse <- useMart("ensembl", dataset = "mmusculus_gene_ensembl", host="https://dec2021.archive.ensembl.org/")
+
+genesV2 <- getLDS(attributes = c("mgi_symbol"), filters = "mgi_symbol", values = x , mart = mouse, attributesL = c("hgnc_symbol"), martL = human, uniqueRows=T)
+humanx <- unique(genesV2[, 2])
+
+# Print the first 6 genes found to the screen
+print(head(humanx))
+return(genesV2)
+}
+
+```
+
+
+```{r}
+
+# x <- convertMouseGeneList("2900055J20Rik")
+
+
+humangene_list <- convertMouseGeneList(rownames(counts))
+humangene_df <- as.data.frame(humangene_list)
+humangene_df
+
+# write.csv(humangene_list, "human_gene_list.csv", row.names = FALSE)
+```
+
+```{r}
+final_mousegene_df <- data.frame(matrix(ncol = length(colnames(counts)), nrow = 0))
+colnames(final_mousegene_df) <- colnames(counts)
+final_mousegene_df
+
+final_humangene_df <- data.frame(matrix(ncol = 1, nrow = 0))
+colnames(final_humangene_df) <- c("Human_gene")
+final_humangene_df
+```
+
+
+
+```{r}
+# this took an hour to run
+for (i in 1:nrow(humangene_df)){
+  # print(humangene_df[i,]$MGI.symbol)
+  if (humangene_df[i,]$MGI.symbol %in% rownames(counts)){
+    final_mousegene_df[nrow(final_mousegene_df)+1, ] <- counts[humangene_df[i,]$MGI.symbol,]
+    final_humangene_df[nrow(final_humangene_df)+1, ] <- humangene_df[i,]$HGNC.symbol
+  }
+}
+final_mousegene_df
+final_humangene_df
+```
+
+
+```{r}
+final_mousegene_df2 <- final_mousegene_df
+rownames(final_mousegene_df2) <- c()
+final_mousegene_df2 <- final_mousegene_df2 %>% mutate(gene = final_humangene_df$Human_gene) %>% select(gene, everything())
+final_mousegene_df2
+
+# write.csv(final_mousegene_df2, "cellphoneDB_c5_countmatrix_wt_ad.csv", row.names = FALSE)
+```
+
+
+```{r}
+# coldata$condition[!str_detect(coldata$sample,'WT')] = 'AD'
+
+final_mousegene_df2_c5_AD <- final_mousegene_df2[,!str_detect(colnames(final_mousegene_df2), "WT")]
+write.csv(final_mousegene_df2_c5_AD, "cellphoneDB_c5_countmatrix_ad.csv", row.names = FALSE)
+
+
+final_mousegene_df2_c5_WT <- final_mousegene_df2[,!str_detect(colnames(final_mousegene_df2), "AD")]
+write.csv(final_mousegene_df2_c5_WT, "cellphoneDB_c5_countmatrix_wt.csv", row.names = FALSE)
+
+```
+
+
+
+
+
+```{r}
+cluster1_matrix <- readRDS("../../c1.rds")
+head(cluster1_matrix)
+
+c1 <- subset(cluster1_matrix, idents=c('1'))
+counts_c1 <- as.data.frame(c1@assays$RNA@counts)
+coldata_c1 <- data.frame(sample= colnames(counts_c1))
+coldata_c1$condition[str_detect(coldata_c1$sample,'WT')] = 'WT'
+coldata_c1$condition[!str_detect(coldata_c1$sample,'WT')] = 'AD'
+
+coldata_c1
+```
+
+```{r}
+humangene_list_c1 <- convertMouseGeneList(rownames(counts_c1))
+humangene_df_c1 <- as.data.frame(humangene_list_c1)
+humangene_df_c1
+```
+
+```{r}
+# create empty data frames to save the genes
+final_mousegene_df_c1 <- data.frame(matrix(ncol = length(colnames(counts_c1)), nrow = 0))
+colnames(final_mousegene_df_c1) <- colnames(counts_c1)
+final_mousegene_df_c1
+
+final_humangene_df_c1 <- data.frame(matrix(ncol = 1, nrow = 0))
+colnames(final_humangene_df_c1) <- c("Human_gene")
+final_humangene_df_c1
+
+# for loop to change the gene names
+for (i in 1:nrow(humangene_df_c1)){
+  # print(humangene_df[i,]$MGI.symbol)
+  if (humangene_df_c1[i,]$MGI.symbol %in% rownames(counts)){
+    final_mousegene_df_c1[nrow(final_mousegene_df_c1)+1, ] <- counts_c1[humangene_df_c1[i,]$MGI.symbol,]
+    final_humangene_df_c1[nrow(final_humangene_df_c1)+1, ] <- humangene_df_c1[i,]$HGNC.symbol
+  }
+}
+```
+
+
+```{r}
+final_humangene_df_c1
+```
+
+
+```{r}
+final_mousegene_df2_c1 <- final_mousegene_df_c1
+rownames(final_mousegene_df2_c1) <- c()
+final_mousegene_df2_c1 <- final_mousegene_df2_c1 %>% mutate(gene = final_humangene_df_c1$Human_gene) %>% select(gene, everything())
+final_mousegene_df2_c1
+
+write.csv(final_mousegene_df2_c1, "cellphoneDB_c1_countmatrix_wt_ad.csv", row.names = FALSE)
+```
+
+
+```{r}
+# coldata$condition[!str_detect(coldata$sample,'WT')] = 'AD'
+
+final_mousegene_df2_c1_AD <- final_mousegene_df2_c1[,!str_detect(colnames(final_mousegene_df2_c1), "WT")]
+write.csv(final_mousegene_df2_c1_AD, "cellphoneDB_c1_countmatrix_ad.csv", row.names = FALSE)
+
+
+final_mousegene_df2_c1_WT <- final_mousegene_df2_c1[,!str_detect(colnames(final_mousegene_df2_c1), "AD")]
+write.csv(final_mousegene_df2_c1_WT, "cellphoneDB_c5_countmatrix_wt.csv", row.names = FALSE)
+
+```
+
+
+## Create the counts and meta for Cellphone DB
+### Start with AD group
+```{r}
+# prepare the count matrix
+c1_c5_final_df <- final_mousegene_df2_c1_AD %>% full_join(final_mousegene_df2_c5_AD)
+# fill the NA with 0
+c1_c5_final_df[is.na(c1_c5_final_df)] <- 0
+
+write.csv(c1_c5_final_df, "cellphoneDB_ready_AD_neuron_microglia_count_matrix.csv", row.names = FALSE)
+
+# prepare the meta data
+AD_meta_table_c1 <- data.frame(Cell = colnames(final_mousegene_df2_c1_AD)[colnames(final_mousegene_df2_c1_AD) != "gene"])
+AD_meta_table_c1 <- AD_meta_table_c1 %>% mutate(Cell_type = "Neuron")
+
+AD_meta_table_c5 <- data.frame(Cell = colnames(final_mousegene_df2_c5_AD)[colnames(final_mousegene_df2_c5_AD) != "gene"])
+AD_meta_table_c5 <- AD_meta_table_c5 %>% mutate(Cell_type = "Microglia")
+
+AD_meta_table <- rbind(AD_meta_table_c1, AD_meta_table_c5)
+write.csv(AD_meta_table, "cellphoneDB_ready_AD_neuron_microglia_meta_table.csv", row.names = FALSE)
+
+```
+
+
+### Start with WT group
+```{r}
+# prepare the count matrix
+c1_c5_final_df_WT <- final_mousegene_df2_c1_WT %>% full_join(final_mousegene_df2_c5_WT)
+# fill the NA with 0
+c1_c5_final_df_WT[is.na(c1_c5_final_df_WT)] <- 0
+
+write.csv(c1_c5_final_df_WT, "cellphoneDB_ready_WT_neuron_microglia_count_matrix.csv", row.names = FALSE)
+
+# prepare the meta data
+WT_meta_table_c1 <- data.frame(Cell = colnames(final_mousegene_df2_c1_WT)[colnames(final_mousegene_df2_c1_WT) != "gene"])
+WT_meta_table_c1 <- WT_meta_table_c1 %>% mutate(Cell_type = "Neuron")
+
+WT_meta_table_c5 <- data.frame(Cell = colnames(final_mousegene_df2_c5_WT)[colnames(final_mousegene_df2_c5_WT) != "gene"])
+WT_meta_table_c5 <- WT_meta_table_c5 %>% mutate(Cell_type = "Microglia")
+
+WT_meta_table <- rbind(WT_meta_table_c1, WT_meta_table_c5)
+write.csv(WT_meta_table, "cellphoneDB_ready_WT_neuron_microglia_meta_table.csv", row.names = FALSE)
+```
+
+
+
+
