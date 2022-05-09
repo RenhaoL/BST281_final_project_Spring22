@@ -18,6 +18,6 @@ Note: in the CellphoneDB output folder, each one contains four different files:
 3. `Figures`: folder contains the dot plots and heatmap from CellphoneDB outputs
 4. `cellphoneDB_ready_AD_neuron_microglia_meta_table.csv` and `cellphoneDB_ready_WT_neuron_microglia_meta_table.csv`: These two files are the meta data for the AD and WT mice
 5. `cellphoneDB_command.sh`: This bash file contains the CellphoneDB commands used for this project
-6. `cellphoneDB_preprocess.Rmd` : This file contains the code to proprocess the Seruat object generated in the previous step to meet the requirement for CellphoneDB inputs. The outputs are the meta data and the count matrices. 
-7.`cellphoneDB_ready_AD_neuron_microglia_count_matrix.csv.zip` and `cellphoneDB_ready_WT_neuron_microglia_count_matrix.csv.zip`: These two files are the count matrices for AD and WT mice. 
+6. `cellphoneDB_preprocess.Rmd` : This file contains the code to proprocess the Seruat object generated in the previous step to meet the requirement for CellphoneDB inputs. The outputs are the meta data and the count matrices.
+7. `cellphoneDB_ready_AD_neuron_microglia_count_matrix.csv.zip` and `cellphoneDB_ready_WT_neuron_microglia_count_matrix.csv.zip`: These two files are the count matrices for AD and WT mice. 
 
