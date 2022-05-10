@@ -5,22 +5,20 @@ output:
     df_print: paged
 ---
 
+### Tutorial
 https://satijalab.org/seurat/articles/pbmc3k_tutorial.html
+
+### Hyperparam used in the paper
+https://github.com/naomihabiblab/5xFAD-sNucSeq/blob/master/FUNCTIONS_SINGLE_CELL_ANALYSIS.r
+
+
+
+### Read in the data
 
 ```{r}
 library(readr)
 EZ_Batch1 <- read_csv("EZ_Batch1.csv")
 EZ_Batch1<-as.data.frame(EZ_Batch1)
-
-
-```
-```{r}
-head(EZ_Batch1)
-```
-
-
-```{r}
-library(Seurat)
 ```
 ```{r}
 colnames(EZ_Batch1)[1] <- "gene"
@@ -30,90 +28,85 @@ head(EZ_Batch1)
 
 ```
 
-
+### Createa Seurat object
 ```{r}
-library(data.table)
-
-
-# transpose
-tez <- transpose(EZ_Batch1)
-
-# get row and colnames in order
-colnames(tez) <- rownames(EZ_Batch1)
-rownames(tez) <- colnames(EZ_Batch1)
-
-```
-
-```{r}
-obj <- CreateSeuratObject(counts=EZ_Batch1, project="EZ_Batch1", min.cells = 3, min.features = 200)
+library(Seurat)
+obj <- CreateSeuratObject(counts=EZ_Batch1, project="EZ_Batch1", min.cells = 5)
 obj
 ```
+
+
+## Some preprocessing work
+Mitochondria (genes begin with "MT-") also has RNAs but is not in our study scope so we remove them here.
 ```{r}
-obj[["percent.mt"]] <- PercentageFeatureSet(obj, pattern = "^MT-")
+lowT=100
+HighT=Inf
+obj[["percent.mito"]] <- PercentageFeatureSet(obj, pattern = "^MT-")
+VlnPlot(object = obj, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3, pt.size = 0, group.by = "orig.ident", sort=FALSE)
+obj <- subset(obj, subset = nFeature_RNA > lowT & nFeature_RNA < HighT & percent.mito < 0.05)
+```
+Seems like we don't have MT in our dataset. Have a look at the relationship between n_genes and N_nuclei
+```{r}
+FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+```
+```{r}
+Norm_PCA <- function(obj, maxPC = 20, nVar = 2000,ClusRes=0.8) {
+  obj <- NormalizeData(object = obj,assay = "RNA",normalization.method = "LogNormalize")
+  obj <- FindVariableFeatures(object = obj,assay = "RNA",nfeatures = nVar)
+  obj <- ScaleData(object = obj, assay = "RNA",features = VariableFeatures(object = obj))
+  obj <- RunPCA(object = obj,assay = "RNA",features = VariableFeatures(object = obj),npcs = 50,ndims.print = 6)
+}
+
+obj = Norm_PCA(obj)
+ElbowPlot(object = obj, ndims = 50,reduction = "pca")
+```
+
+Let's find a right place to cut the PCA
+```{r}
+## https://hbctraining.github.io/scRNA-seq/lessons/elbow_plot_metric.html#:~:text=The%20elbow%20plot%20is%20helpful,the%20majority%20of%20the%20variation.
+library("ggplot2")
+
+Find_Elbow <- function(obj, cumu_pct_thd=95, pct_thd=3){
+                       
+  pct <- obj[["pca"]]@stdev / sum(obj[["pca"]]@stdev) * 100
+  # Calculate cumulative percents for each PC
+  cumu <- cumsum(pct)
+  # Determine which PC exhibits cumulative percent greater than 90% and % variation associated with the PC as less than 5
+  co1 <- which(cumu > cumu_pct_thd & pct < pct_thd)[1]
+  co2 <- sort(which((pct[1:length(pct) - 1] - pct[2:length(pct)]) > 0.1), decreasing = T)[1] + 1
+  pcs <- min(co1, co2)
+  plot_df <- data.frame(pct = pct, 
+             cumu = cumu, 
+             rank = 1:length(pct))
+  # Elbow plot to visualize 
+  ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pcs)) + 
+    geom_text() + 
+    # geom_vline(xintercept = cumu_pct_thd, color = "grey") + 
+    # geom_hline(yintercept = min(pct[pct > pct_thd ]), color = "grey") +
+    labs(x="Cumulative percentage of variation", 
+         y="Percentage of variation",
+         fill = "After elbow point") + 
+    theme_bw()
+}
+Find_Elbow(obj)
+```
+We'll use dimension 1-20
+```{r}
+maxPC = 20
+ClusRes = 0.8
+obj <- RunTSNE(object = obj,reduction = "pca",dims = c(1:maxPC), features = VariableFeatures(obj),tsne.method = "Rtsne")
+obj <- FindNeighbors(object = obj,reduction = "pca",dims = c(1:maxPC),features = VariableFeatures(obj),k.param = 40)
+obj <- FindClusters(object = obj,resolution = ClusRes)
 ```
 
 ```{r}
-VlnPlot(obj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-```
-```{r}
-
-plot1 <- FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "percent.mt")
-plot2 <- FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-plot1
-plot2
-```
-```{r}
-obj <- subset(obj, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
-obj <- NormalizeData(obj, normalization.method = "LogNormalize", scale.factor = 10000)
-```
-```{r}
-obj <- FindVariableFeatures(obj, selection.method = "vst", nfeatures = 2000)
-
-# Identify the 10 most highly variable genes
-top10 <- head(VariableFeatures(obj), 10)
-
-# plot variable features with and without labels
-plot1 <- VariableFeaturePlot(obj)
-plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
-plot1
-plot2
-```
-```{r}
-all.genes <- rownames(obj)
-obj <- ScaleData(obj, features = all.genes)
-```
-```{r}
-obj <- RunPCA(obj, features = VariableFeatures(object = obj))
-print(obj[["pca"]], dims = 1:5, nfeatures = 5)
+DimPlot(object = obj,reduction = "tsne", label=TRUE)
 ```
 
 
 ```{r}
-DimHeatmap(obj, dims = 1, cells = 500, balanced = TRUE)
-```
-```{r}
-ElbowPlot(obj)
-```
-
-```{r}
-obj <- FindNeighbors(obj, dims = 1:20)
-obj <- FindClusters(obj, resolution = 0.5)
-```
-
-
-```{r}
-head(Idents(obj), 5)
-```
-
-
-```{r}
-obj <- RunUMAP(obj, dims = 1:20)
+obj <- RunUMAP(obj, dims = 1:maxPC)
 DimPlot(obj, reduction = "umap", label=TRUE)
-
-```
-
-```{r}
-x_markers <- FindMarkers(obj, ident.1 = 1, min.pct = 0.25,  test.use = "wilcox")
 ```
 
 ```{r}
@@ -130,9 +123,8 @@ for (x in 1:21) {
 
 
 ```{r}
-c17 <- subset(obj, idents = c("17"))
-```{r}
-saveRDS(c17, file = "c17.rds")
-
+c5 <- subset(obj, idents = c("5"))
 ```
+```{r}
+saveRDS(c5, file = "c5.rds")
 ```
