@@ -1,0 +1,5 @@
+SOURCE	TARGET	count
+Neuron	Neuron	4
+Neuron	Microglia	11
+Microglia	Neuron	11
+Microglia	Microglia	9
