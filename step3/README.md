@@ -4,7 +4,7 @@ In this part, I used the clusterProfiler package (version 3.18.1) to perform the
 
 The description for each file is listed here: 
 
-1. `gene_list.R`: This R script takes lists of significant DEGs from step2 and then extracts the up- and down-regulated genes based on log2FoldChange directions.
+1. `gene_list.R`: This R script takes lists of significant DEGs from step2 and then extracts the up- and down-regulated genes based on log2FoldChange directions. `enrichGO()` and `enrichKEGG()` are next being performed on those up- and down-regulated genes. Barplots and dotplots are finally utilized to visualize the top significant enriched GO BP terms and KEGG pathways.
 2. `gene_list_AD.txt`: This file contains list of up-regulated genes having log2FoldChange>0.
 3. `gene_list_WT.txt`: This file contains list o down-regulated genes having log2FoldChange<0. 
 4. `KEGG_UP.jpeg`: This figure is the visualization of top30 enriched KEGG pathways for up-regulated genes from `enrichKEGG()` in horizontal bar plots with negative-log10 transformed adjusted p-value on the x-axis.
