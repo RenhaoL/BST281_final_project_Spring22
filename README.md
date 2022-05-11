@@ -3,6 +3,8 @@ This repository is for the Spring 2022 BST281 final project
 
 Link to the proposal: https://docs.google.com/document/d/15N5rx_pjfoQD_6f8W_LaUt3aAc_6FFi62MjR01RT-eI/edit?usp=sharing
 
+Link to the final write-up: https://docs.google.com/document/d/1qfbJqAXosRNAHvteRfodbaY0pdiPJ4LDSLeRzaHcmso/edit#
+
 ## Introduction
 Please see the following steps for our single-nucleus RNA-seq analysis. For each step below, we create a corresponding folder. Please go into each folder and check out the description. 
 
