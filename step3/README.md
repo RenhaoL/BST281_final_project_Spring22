@@ -9,7 +9,7 @@ The description for each file is listed here:
 3. `gene_list_WT.txt`: This file contains list o down-regulated genes having log2FoldChange<0. 
 4. `KEGG_UP.jpeg`: This figure is the visualization of top30 enriched KEGG pathways for up-regulated genes from `enrichKEGG()` in horizontal bar plots with negative-log10 transformed adjusted p-value on the x-axis.
 5. `KEGG_DOWN.jpeg`:This figure is the visualization of top30 enriched KEGG pathways for down-regulated genes from `enrichKEGG()` in horizontal bar plots with negative-log10 transformed adjusted p-value on the x-axis.
-6. `GO_BP_AD.txt`: This is the GO BP Terms output coming out of the DAVID for the up-regulated genes to compare withh the GO BP results from clusterProfiler package.
-7. `GO_BP_WT.txt`:This is the GO BP Terms output coming out of the DAVID for the down-regulated genes to compare withh the GO BP results from clusterProfiler package.
+6. `GO_BP_AD.txt`: This is the GO BP Terms output coming out of the DAVID (https://david.ncifcrf.gov/) for the up-regulated genes to compare with the GO BP results generated from clusterProfiler package.
+7. `GO_BP_WT.txt`:This is the GO BP Terms output coming out of the DAVID (https://david.ncifcrf.gov/) for the down-regulated genes to compare with the GO BP results generated from clusterProfiler package.
 8. `Dotplot_UP.jpeg`: This figure is generated using `enrichplot` and displays the top40 enriched GO BP Terms for up-regulated genes from `enrichGO()` in dot plots with dots color being filled with adjusted p-value and dots shape being proportional to the counts of genes in each pathway.
 9. `Dotplot_DOWN.jpeg`: This figure is generated using `enrichplot` and displays the top40 enriched GO BP Terms for down-regulated genes from `enrichGO()` in dot plots with dots color being filled with adjusted p-value and dots shape being proportional to the counts of genes in each pathway.
