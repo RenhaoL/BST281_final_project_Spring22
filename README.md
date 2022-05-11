@@ -8,9 +8,9 @@ Please see the following steps for our single-nucleus RNA-seq analysis. For each
 
 ## Steps
 
-Step1:
+Step1: Data process, UMAP, and cluster annotation. 
 
-Step2:
+Step2: Differentially expressed genes (DEGs) identification 
 
 Step3: GO and KEGG pathway enrichement analysis
 
